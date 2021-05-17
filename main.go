@@ -16,6 +16,8 @@ func main() {
 	r.GET("/tasks", GetTasks)
 	r.GET("/tasks/:taskid", GetTask)
 	r.POST("/tasks", AddTask)
+	r.PATCH("/tasks/:taskid", UpdateTask)
+	r.DELETE("/tasks/:taskid", DeleteTask)
 
 	r.Run()
 }
@@ -85,4 +87,70 @@ func AddTask(c *gin.Context) {
 	}
 
 	c.JSON(200, result)
+}
+
+func UpdateTask(c *gin.Context) {
+	taskid, err := strconv.Atoi(c.Param("taskid"))
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "TaskId mast be integer type.",
+		})
+		return
+	}
+
+	subject := c.PostForm("subject")
+	priority := c.PostForm("priority")
+
+	task := data.Task{
+		Id:       taskid,
+		Subject:  subject,
+		Priority: priority,
+	}
+
+	err = task.UpdateTask()
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": err,
+		})
+		return
+	}
+
+	result, err := data.ReadTask(int(taskid))
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": err,
+		})
+		return
+	}
+
+	c.JSON(200, result)
+}
+
+func DeleteTask(c *gin.Context) {
+	taskid, err := strconv.Atoi(c.Param("taskid"))
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "TaskId mast be integer type.",
+		})
+		return
+	}
+
+	task := data.Task{
+		Id: taskid,
+	}
+
+	err = task.DeleteTask()
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": err,
+		})
+		return
+	}
+
+	c.JSON(200, taskid)
 }
